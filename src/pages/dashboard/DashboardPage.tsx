@@ -1,14 +1,61 @@
-import { LayoutDashboard } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, CalendarPlus, UserRoundSearch } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import ActiveJobs from '../../components/dashboard/ActiveJobs'
+import ApplicationsByStartup from '../../components/dashboard/ApplicationsByStartup'
+import KpiCards from '../../components/dashboard/KpiCards'
+import RecentApplications from '../../components/dashboard/RecentApplications'
 
 function DashboardPage() {
   return (
-    <section>
-      <h2 className="text-2xl font-bold text-slate-900">Hiring overview</h2>
-      <p className="mt-2 text-slate-600">Track the progress of QSTP internship hiring from one central workspace.</p>
-      <div className="mt-7 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <LayoutDashboard className="size-7 text-teal-700" strokeWidth={1.8} />
-        <h3 className="mt-5 text-lg font-semibold text-slate-900">Dashboard module coming next</h3>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Hiring metrics, vacancy updates, and recent recruiting activity will be added here in the next phase.</p>
+    <section className="space-y-7">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">QSTP Talent</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Hiring overview</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
+            QSTP centrally manages internship vacancies and candidate reviews for startups across its ecosystem.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 min-[430px]:flex-row">
+          <Link to="/applicants" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
+            <UserRoundSearch aria-hidden="true" className="size-4" />
+            View applicants
+          </Link>
+          <Link to="/jobs" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-800">
+            <CalendarPlus aria-hidden="true" className="size-4" />
+            Create job
+          </Link>
+        </div>
+      </div>
+
+      <KpiCards />
+
+      <div className="grid gap-7 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
+        <RecentApplications />
+        <ApplicationsByStartup />
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-lg bg-teal-50 text-teal-700">
+              <BriefcaseBusiness aria-hidden="true" className="size-5" />
+            </span>
+            <div>
+              <h3 className="font-semibold text-slate-900">Active jobs</h3>
+              <p className="mt-0.5 text-sm text-slate-500">Open internship vacancies across QSTP startups</p>
+            </div>
+          </div>
+          <Link to="/jobs" className="hidden items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-800 sm:inline-flex">
+            View all jobs <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        </div>
+        <ActiveJobs />
+        <div className="border-t border-slate-100 p-4 sm:hidden">
+          <Link to="/jobs" className="flex items-center justify-center gap-1.5 text-sm font-semibold text-teal-700">
+            View all jobs <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        </div>
       </div>
     </section>
   )
