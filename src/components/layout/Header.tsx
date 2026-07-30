@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 const routeDetails: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'A clear view of your internship hiring activity.' },
   '/jobs': { title: 'Jobs', subtitle: 'Manage internship vacancies for QSTP startups.' },
+  '/jobs/new': { title: 'Create job', subtitle: 'Set up a new internship opportunity.' },
   '/applicants': { title: 'Applicants', subtitle: 'Review and organize candidates across your vacancies.' },
   '/settings': { title: 'Settings', subtitle: 'Manage your team workspace and preferences.' },
 }
