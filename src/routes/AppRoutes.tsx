@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from '../layouts/AppLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import ApplicantsPage from '../pages/applicants/ApplicantsPage'
+import ApplicantProfilePage from '../pages/applicants/ApplicantProfilePage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import CreateJobPage from '../pages/jobs/CreateJobPage'
 import JobsPage from '../pages/jobs/JobsPage'
@@ -21,6 +22,7 @@ function AppRoutes() {
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/new" element={<CreateJobPage />} />
           <Route path="applicants" element={<ApplicantsPage />} />
+          <Route path="applicants/:applicantId" element={<ApplicantProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route element={<PublicLayout />}>
