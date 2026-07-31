@@ -75,8 +75,12 @@ export async function getApplicationFiles(applicationId: string): Promise<Applic
   if (error) throw friendly(error, 'Unable to load application files.')
   return (data ?? []) as ApplicationFileRecord[]
 }
-export async function createSignedFileUrl(storagePath: string): Promise<string> {
-  const { data, error } = await requireSupabase().storage.from(BUCKET).createSignedUrl(storagePath, 600)
+export async function createSignedFileUrl(storagePath: string, downloadFilename?: string): Promise<string> {
+  const { data, error } = await requireSupabase().storage.from(BUCKET).createSignedUrl(
+    storagePath,
+    600,
+    downloadFilename ? { download: downloadFilename } : undefined,
+  )
   if (error || !data?.signedUrl) throw new Error('Unable to create a secure file link. Please try again.')
   return data.signedUrl
 }

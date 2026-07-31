@@ -1,12 +1,73 @@
-import { ArrowLeft, ExternalLink, FileText, UserRound } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, FileText, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { createSignedFileUrl, getApplicationById, getApplicationFiles, updateApplicationStatus } from '../../services/applicationsService'
 import type { ApplicationFileRecord, ApplicationStatus, ApplicationWithJob } from '../../types/database'
-const statuses:ApplicationStatus[]=['new','reviewing','shortlisted','interview','offer','hired','rejected','withdrawn']; const label=(v:string)=>v==='reviewing'?'Under review':v[0].toUpperCase()+v.slice(1)
-export default function ApplicantProfilePage(){const {applicantId}=useParams();const [app,setApp]=useState<ApplicationWithJob|null>();const [files,setFiles]=useState<ApplicationFileRecord[]>([]);const [error,setError]=useState('');const [saving,setSaving]=useState(false)
- useEffect(()=>{Promise.all([getApplicationById(applicantId??''),getApplicationFiles(applicantId??'')]).then(([a,f])=>{setApp(a);setFiles(f)}).catch(e=>setError(e instanceof Error?e.message:'Unable to load application.'))},[applicantId])
- if(app===undefined&&!error)return <p role="status" className="p-12 text-center">Loading application…</p>; if(!app)return <section className="rounded-xl border bg-white p-12 text-center"><UserRound className="mx-auto size-8"/><h1 className="mt-4 text-xl font-bold">Application not found</h1><p className="mt-2 text-rose-700">{error}</p><Link to="/applicants" className="mt-5 inline-block text-teal-700">Back to applicants</Link></section>
- const change=async(status:ApplicationStatus)=>{setSaving(true);setError('');try{await updateApplicationStatus(app.id,status);setApp({...app,status})}catch(e){setError(e instanceof Error?e.message:'Unable to update status.')}finally{setSaving(false)}};const open=async(file:ApplicationFileRecord)=>{setError('');try{const url=await createSignedFileUrl(file.storage_path);window.open(url,'_blank','noopener,noreferrer')}catch(e){setError(e instanceof Error?e.message:'Unable to open file.')}}
- return <section className="space-y-6"><Link to="/applicants" className="inline-flex items-center gap-2 font-semibold text-teal-700"><ArrowLeft className="size-4"/>Back to applicants</Link><header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-bold">{app.full_name}</h1><p className="mt-2 text-slate-600">{app.job.title} · {app.job.startup.name}</p><p className="mt-1 text-sm text-slate-500">Submitted {new Date(app.submitted_at).toLocaleString()}</p></div><label className="text-sm font-bold">Status<select disabled={saving} value={app.status} onChange={e=>change(e.target.value as ApplicationStatus)} className="ml-3 rounded-lg border px-3 py-2">{statuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</select></label></header>{error&&<p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-700">{error}</p>}<div className="grid gap-6 lg:grid-cols-3"><main className="space-y-6 lg:col-span-2"><Card title="Candidate details"><dl className="grid gap-4 sm:grid-cols-2">{[['Email',app.email],['Phone',app.phone],['Country',app.country_of_residence],['University',app.university],['Degree',app.degree],['Field of study',app.field_of_study],['Expected graduation',app.expected_graduation_date]].map(([k,v])=><div key={k}><dt className="text-xs font-bold uppercase text-slate-400">{k}</dt><dd className="mt-1 text-sm">{v||'—'}</dd></div>)}</dl><div className="mt-5 flex gap-4">{app.linkedin_url&&<a target="_blank" rel="noreferrer" href={app.linkedin_url} className="text-teal-700">LinkedIn <ExternalLink className="inline size-3"/></a>}{app.portfolio_url&&<a target="_blank" rel="noreferrer" href={app.portfolio_url} className="text-teal-700">Portfolio or GitHub <ExternalLink className="inline size-3"/></a>}</div></Card><Card title="Cover letter"><p className="whitespace-pre-wrap text-sm leading-7">{app.cover_letter||'No cover letter was provided.'}</p></Card><Card title="Screening answers"><div className="space-y-4">{app.screening_answers.length?app.screening_answers.map(a=><article key={a.question_id} className="rounded-lg border p-4"><h3 className="font-bold">{a.question}</h3><p className="mt-1 text-xs uppercase text-slate-400">{a.type.replaceAll('_',' ')}</p><p className="mt-3 text-sm">{Array.isArray(a.answer)?a.answer.join(', '):String(a.answer)}</p></article>):<p>No screening answers were submitted.</p>}</div></Card></main><aside className="space-y-6"><Card title="Application files">{files.length?files.map(f=><button key={f.id} onClick={()=>open(f)} className="mb-2 flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-slate-50"><FileText className="size-5 text-teal-700"/><span><b className="block text-sm">{f.original_filename}</b><span className="text-xs text-slate-500">Open secure 10-minute link</span></span></button>):<p className="text-sm text-slate-500">No files are attached.</p>}</Card><Card title="AI candidate insights — demo placeholder"><p className="text-sm text-slate-600">AI analysis is not connected for this milestone. No match scores or recommendations have been generated.</p></Card></aside></div></section>}
-function Card({title,children}:{title:string;children:React.ReactNode}){return <section className="rounded-xl border bg-white p-5 shadow-sm"><h2 className="mb-4 text-lg font-bold">{title}</h2>{children}</section>}
+
+const statuses: ApplicationStatus[] = ['new', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected']
+const label = (value: string) => value === 'reviewing' ? 'Under review' : value[0].toUpperCase() + value.slice(1)
+
+export default function ApplicantProfilePage() {
+  const { applicantId } = useParams()
+  const [application, setApplication] = useState<ApplicationWithJob | null>()
+  const [files, setFiles] = useState<ApplicationFileRecord[]>([])
+  const [resumeUrl, setResumeUrl] = useState('')
+  const [resumeDownloadUrl, setResumeDownloadUrl] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    void (async () => {
+      try {
+        if (!applicantId) throw new Error('Application not found.')
+        const [loadedApplication, loadedFiles] = await Promise.all([
+          getApplicationById(applicantId),
+          getApplicationFiles(applicantId),
+        ])
+        if (!active) return
+        setApplication(loadedApplication)
+        setFiles(loadedFiles)
+
+        const resume = loadedFiles.find((file) => file.file_type === 'resume')
+        if (!resume) return
+        const [openUrl, downloadUrl] = await Promise.all([
+          createSignedFileUrl(resume.storage_path),
+          createSignedFileUrl(resume.storage_path, resume.original_filename),
+        ])
+        if (active) {
+          setResumeUrl(openUrl)
+          setResumeDownloadUrl(downloadUrl)
+        }
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : 'Unable to load application.')
+      }
+    })()
+
+    return () => { active = false }
+  }, [applicantId])
+
+  if (application === undefined && !error) return <p role="status" className="p-12 text-center">Loading application…</p>
+  if (!application) return <section className="rounded-xl border bg-white p-12 text-center"><UserRound className="mx-auto size-8"/><h1 className="mt-4 text-xl font-bold">Application not found</h1><p className="mt-2 text-rose-700">{error}</p><Link to="/applicants" className="mt-5 inline-block text-teal-700">Back to applicants</Link></section>
+
+  const changeStatus = async (status: ApplicationStatus) => {
+    setSaving(true)
+    setError('')
+    try {
+      await updateApplicationStatus(application.id, status)
+      setApplication({ ...application, status })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update status.')
+    } finally {
+      setSaving(false)
+    }
+  }
+  const resume = files.find((file) => file.file_type === 'resume')
+
+  return <section className="space-y-6"><Link to="/applicants" className="inline-flex items-center gap-2 font-semibold text-teal-700"><ArrowLeft className="size-4"/>Back to applicants</Link><header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-bold">{application.full_name}</h1><p className="mt-2 text-slate-600">{application.job.title} · {application.job.startup.name}</p><p className="mt-1 text-sm text-slate-500">Submitted {new Date(application.submitted_at).toLocaleString()}</p></div><label className="text-sm font-bold">Status<select disabled={saving} value={application.status} onChange={(event) => void changeStatus(event.target.value as ApplicationStatus)} className="ml-3 rounded-lg border px-3 py-2">{statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></label></header>{error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-700">{error}</p>}<div className="grid gap-6 lg:grid-cols-3"><main className="space-y-6 lg:col-span-2"><Card title="Candidate details"><dl className="grid gap-4 sm:grid-cols-2">{[['Email', application.email], ['Phone', application.phone], ['Country', application.country_of_residence], ['University', application.university], ['Degree', application.degree], ['Field of study', application.field_of_study], ['Expected graduation', application.expected_graduation_date]].map(([key, value]) => <div key={key}><dt className="text-xs font-bold uppercase text-slate-400">{key}</dt><dd className="mt-1 text-sm">{value || '—'}</dd></div>)}</dl><div className="mt-5 flex gap-4">{application.linkedin_url && <a target="_blank" rel="noreferrer" href={application.linkedin_url} className="text-teal-700">LinkedIn <ExternalLink className="inline size-3"/></a>}{application.portfolio_url && <a target="_blank" rel="noreferrer" href={application.portfolio_url} className="text-teal-700">Portfolio or GitHub <ExternalLink className="inline size-3"/></a>}</div></Card><Card title="Cover letter"><p className="whitespace-pre-wrap text-sm leading-7">{application.cover_letter || 'No cover letter was provided.'}</p></Card><Card title="Screening answers"><div className="space-y-4">{application.screening_answers.length ? application.screening_answers.map((answer) => <article key={answer.question_id} className="rounded-lg border p-4"><h3 className="font-bold">{answer.question}</h3><p className="mt-1 text-xs uppercase text-slate-400">{answer.type.replaceAll('_', ' ')}</p><p className="mt-3 text-sm">{Array.isArray(answer.answer) ? answer.answer.join(', ') : String(answer.answer)}</p></article>) : <p>No screening answers were submitted.</p>}</div></Card></main><aside className="space-y-6"><Card title="Application files">{resume ? <div className="rounded-lg border p-3"><div className="flex items-center gap-3"><FileText className="size-5 text-teal-700"/><b className="text-sm">{resume.original_filename}</b></div><div className="mt-3 flex flex-wrap gap-2"><a href={resumeUrl || undefined} target="_blank" rel="noreferrer" aria-disabled={!resumeUrl} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold ${resumeUrl ? 'hover:bg-slate-50' : 'pointer-events-none opacity-50'}`}><ExternalLink className="size-4"/>Open Resume</a><a href={resumeDownloadUrl || undefined} aria-disabled={!resumeDownloadUrl} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold ${resumeDownloadUrl ? 'hover:bg-slate-50' : 'pointer-events-none opacity-50'}`}><Download className="size-4"/>Download Resume</a></div><p className="mt-2 text-xs text-slate-500">Secure links expire after 10 minutes.</p></div> : <p className="text-sm text-slate-500">No resume is attached.</p>}</Card><Card title="AI candidate insights — demo placeholder"><p className="text-sm text-slate-600">AI analysis is not connected for this milestone. No match scores or recommendations have been generated.</p></Card></aside></div></section>
+}
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="rounded-xl border bg-white p-5 shadow-sm"><h2 className="mb-4 text-lg font-bold">{title}</h2>{children}</section>
+}
