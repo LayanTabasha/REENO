@@ -1,10 +1,10 @@
 import { Sparkles } from 'lucide-react'
 import type { JobDetails } from './types'
 
-type Props = { value: JobDetails; errors: Partial<Record<keyof JobDetails, string>>; onChange: (next: JobDetails) => void; onGenerate: () => void }
+type Props = { value: JobDetails; errors: Partial<Record<keyof JobDetails, string>>; onChange: (next: JobDetails) => void; onGenerate: () => void; startups: string[]; startupsLoading: boolean }
 const inputClass = 'mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100'
 
-export default function JobDetailsStep({ value, errors, onChange, onGenerate }: Props) {
+export default function JobDetailsStep({ value, errors, onChange, onGenerate, startups, startupsLoading }: Props) {
   const set = <K extends keyof JobDetails>(key: K, val: JobDetails[K]) => onChange({ ...value, [key]: val })
   const field = (key: keyof JobDetails, label: string, required = false, type = 'text') => (
     <label className="block text-sm font-semibold text-slate-700">{label}{required && <span className="text-rose-600"> *</span>}
@@ -25,7 +25,7 @@ export default function JobDetailsStep({ value, errors, onChange, onGenerate }: 
     </label>
   )
   return <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><h2 className="text-lg font-bold text-slate-900">Internship details</h2><p className="mt-1 text-sm text-slate-500">Tell candidates about the startup and opportunity.</p><div className="mt-6 grid gap-5 sm:grid-cols-2">
-    {select('startup', 'Startup name', ['AeroQ', 'Sadeem Technology', 'GreenRoute', 'MedLoop'], true)}{field('title', 'Job title', true)}{field('department', 'Department', true)}{field('location', 'Location', true)}
+    {select('startup', 'Startup name', startupsLoading ? [] : startups, true)}{field('title', 'Job title', true)}{field('department', 'Department', true)}{field('location', 'Location', true)}
     {select('employmentType', 'Employment type', ['Internship', 'Part-time internship', 'Graduate internship'], true)}{select('workArrangement', 'Work arrangement', ['On-site', 'Hybrid', 'Remote'], true)}
     {field('deadline', 'Application deadline', true, 'date')}{field('openings', 'Number of openings', true, 'number')}{textarea('description', 'Job description', true)}{textarea('qualifications', 'Qualifications')}{textarea('requirements', 'Requirements')}
   </div></section>

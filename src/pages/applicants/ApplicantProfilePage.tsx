@@ -1,29 +1,12 @@
-import { ArrowLeft, UserRound } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, ExternalLink, FileText, UserRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import ApplicantProfileHeader from '../../components/applicants/ApplicantProfileHeader'
-import ApplicantReviewTabs from '../../components/applicants/ApplicantReviewTabs'
-import { AIWritingIndicatorCard, ApplicantEvaluationCard, ApplicantQuickActions, CandidateInsightsCard, RecruiterNotesCard } from '../../components/applicants/ApplicantReviewSidebar'
-import ApplicantSummaryCard, { SkillsCard } from '../../components/applicants/ApplicantSummaryCard'
-import { applicants, type Applicant, type ApplicantStatus } from '../../data/applicants'
-
-function ReviewWorkspace({ applicant }: { applicant: Applicant }) {
-  const [status, setStatus] = useState<ApplicantStatus>(applicant.status)
-  return <section className="space-y-6">
-    <ApplicantProfileHeader applicant={applicant} status={status} onStatusChange={setStatus} />
-    <ApplicantSummaryCard applicant={applicant} />
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-      <main className="min-w-0 space-y-6"><SkillsCard skills={applicant.skills} /><ApplicantReviewTabs applicant={applicant} /></main>
-      <aside aria-label="Recruiter decision tools" className="min-w-0 space-y-6"><CandidateInsightsCard insights={applicant.aiInsights} /><AIWritingIndicatorCard indicator={applicant.aiWritingIndicator} /><ApplicantQuickActions status={status} onStatusChange={setStatus} /><ApplicantEvaluationCard initialEvaluation={applicant.evaluation} /><RecruiterNotesCard initialNotes={applicant.recruiterNotes} /></aside>
-    </div>
-  </section>
-}
-
-function ApplicantProfilePage() {
-  const { applicantId } = useParams()
-  const applicant = applicants.find((item) => item.id === applicantId)
-  if (!applicant) return <section className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm"><span className="mx-auto grid size-12 place-items-center rounded-full bg-slate-100 text-slate-500"><UserRound aria-hidden="true" className="size-6" /></span><h1 className="mt-4 text-xl font-bold text-slate-900">Applicant not found</h1><p className="mt-2 text-sm text-slate-500">This applicant record does not exist or is no longer available.</p><Link to="/applicants" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"><ArrowLeft aria-hidden="true" className="size-4" />Back to applicants</Link></section>
-  return <ReviewWorkspace key={applicant.id} applicant={applicant} />
-}
-
-export default ApplicantProfilePage
+import { createSignedFileUrl, getApplicationById, getApplicationFiles, updateApplicationStatus } from '../../services/applicationsService'
+import type { ApplicationFileRecord, ApplicationStatus, ApplicationWithJob } from '../../types/database'
+const statuses:ApplicationStatus[]=['new','reviewing','shortlisted','interview','offer','hired','rejected','withdrawn']; const label=(v:string)=>v==='reviewing'?'Under review':v[0].toUpperCase()+v.slice(1)
+export default function ApplicantProfilePage(){const {applicantId}=useParams();const [app,setApp]=useState<ApplicationWithJob|null>();const [files,setFiles]=useState<ApplicationFileRecord[]>([]);const [error,setError]=useState('');const [saving,setSaving]=useState(false)
+ useEffect(()=>{Promise.all([getApplicationById(applicantId??''),getApplicationFiles(applicantId??'')]).then(([a,f])=>{setApp(a);setFiles(f)}).catch(e=>setError(e instanceof Error?e.message:'Unable to load application.'))},[applicantId])
+ if(app===undefined&&!error)return <p role="status" className="p-12 text-center">Loading application…</p>; if(!app)return <section className="rounded-xl border bg-white p-12 text-center"><UserRound className="mx-auto size-8"/><h1 className="mt-4 text-xl font-bold">Application not found</h1><p className="mt-2 text-rose-700">{error}</p><Link to="/applicants" className="mt-5 inline-block text-teal-700">Back to applicants</Link></section>
+ const change=async(status:ApplicationStatus)=>{setSaving(true);setError('');try{await updateApplicationStatus(app.id,status);setApp({...app,status})}catch(e){setError(e instanceof Error?e.message:'Unable to update status.')}finally{setSaving(false)}};const open=async(file:ApplicationFileRecord)=>{setError('');try{const url=await createSignedFileUrl(file.storage_path);window.open(url,'_blank','noopener,noreferrer')}catch(e){setError(e instanceof Error?e.message:'Unable to open file.')}}
+ return <section className="space-y-6"><Link to="/applicants" className="inline-flex items-center gap-2 font-semibold text-teal-700"><ArrowLeft className="size-4"/>Back to applicants</Link><header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-bold">{app.full_name}</h1><p className="mt-2 text-slate-600">{app.job.title} · {app.job.startup.name}</p><p className="mt-1 text-sm text-slate-500">Submitted {new Date(app.submitted_at).toLocaleString()}</p></div><label className="text-sm font-bold">Status<select disabled={saving} value={app.status} onChange={e=>change(e.target.value as ApplicationStatus)} className="ml-3 rounded-lg border px-3 py-2">{statuses.map(s=><option key={s} value={s}>{label(s)}</option>)}</select></label></header>{error&&<p role="alert" className="rounded-lg bg-rose-50 p-3 text-rose-700">{error}</p>}<div className="grid gap-6 lg:grid-cols-3"><main className="space-y-6 lg:col-span-2"><Card title="Candidate details"><dl className="grid gap-4 sm:grid-cols-2">{[['Email',app.email],['Phone',app.phone],['Country',app.country_of_residence],['University',app.university],['Degree',app.degree],['Field of study',app.field_of_study],['Expected graduation',app.expected_graduation_date]].map(([k,v])=><div key={k}><dt className="text-xs font-bold uppercase text-slate-400">{k}</dt><dd className="mt-1 text-sm">{v||'—'}</dd></div>)}</dl><div className="mt-5 flex gap-4">{app.linkedin_url&&<a target="_blank" rel="noreferrer" href={app.linkedin_url} className="text-teal-700">LinkedIn <ExternalLink className="inline size-3"/></a>}{app.portfolio_url&&<a target="_blank" rel="noreferrer" href={app.portfolio_url} className="text-teal-700">Portfolio or GitHub <ExternalLink className="inline size-3"/></a>}</div></Card><Card title="Cover letter"><p className="whitespace-pre-wrap text-sm leading-7">{app.cover_letter||'No cover letter was provided.'}</p></Card><Card title="Screening answers"><div className="space-y-4">{app.screening_answers.length?app.screening_answers.map(a=><article key={a.question_id} className="rounded-lg border p-4"><h3 className="font-bold">{a.question}</h3><p className="mt-1 text-xs uppercase text-slate-400">{a.type.replaceAll('_',' ')}</p><p className="mt-3 text-sm">{Array.isArray(a.answer)?a.answer.join(', '):String(a.answer)}</p></article>):<p>No screening answers were submitted.</p>}</div></Card></main><aside className="space-y-6"><Card title="Application files">{files.length?files.map(f=><button key={f.id} onClick={()=>open(f)} className="mb-2 flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-slate-50"><FileText className="size-5 text-teal-700"/><span><b className="block text-sm">{f.original_filename}</b><span className="text-xs text-slate-500">Open secure 10-minute link</span></span></button>):<p className="text-sm text-slate-500">No files are attached.</p>}</Card><Card title="AI candidate insights — demo placeholder"><p className="text-sm text-slate-600">AI analysis is not connected for this milestone. No match scores or recommendations have been generated.</p></Card></aside></div></section>}
+function Card({title,children}:{title:string;children:React.ReactNode}){return <section className="rounded-xl border bg-white p-5 shadow-sm"><h2 className="mb-4 text-lg font-bold">{title}</h2>{children}</section>}

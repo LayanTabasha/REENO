@@ -1,5 +1,6 @@
 import { Bell, Search } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/useAuth'
 
 const routeDetails: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'A clear view of your internship hiring activity.' },
@@ -11,7 +12,9 @@ const routeDetails: Record<string, { title: string; subtitle: string }> = {
 
 function Header() {
   const { pathname } = useLocation()
-  const details = routeDetails[pathname] ?? routeDetails['/dashboard']
+  const { profile } = useAuth()
+  const details = pathname.match(/^\/jobs\/[^/]+\/edit$/) ? { title: 'Edit job', subtitle: 'Update this internship opportunity.' } : pathname.match(/^\/jobs\/[^/]+$/) ? { title: 'Job details', subtitle: 'Review this internship opportunity.' } : routeDetails[pathname] ?? routeDetails['/dashboard']
+  const initials = profile?.full_name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'QT'
 
   return (
     <header className="border-b border-slate-200 bg-white px-5 py-4 sm:px-6 lg:px-8">
@@ -33,7 +36,7 @@ function Header() {
           <button type="button" aria-label="View notifications" className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800">
             <Bell aria-hidden="true" className="size-5" strokeWidth={1.8} />
           </button>
-          <div aria-label="QSTP Hiring Team profile" className="grid size-10 shrink-0 place-items-center rounded-full bg-teal-700 text-sm font-bold text-white">QT</div>
+          <div aria-label={`${profile?.full_name ?? 'Recruiter'} profile`} title={profile?.full_name} className="grid size-10 shrink-0 place-items-center rounded-full bg-teal-700 text-sm font-bold text-white">{initials}</div>
         </div>
       </div>
     </header>

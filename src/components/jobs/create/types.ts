@@ -13,7 +13,8 @@ export type JobDetails = {
 }
 
 export type ApplicantField = { id: string; label: string; enabled: boolean; required: boolean; locked?: boolean }
-export type QuestionType = 'Short text' | 'Long text' | 'Yes or no' | 'Multiple choice' | 'Number'
-export type ScreeningQuestion = { id: string; text: string; type: QuestionType; required: boolean; options: string[] }
-export type JobDraft = { details: JobDetails; fields: ApplicantField[]; questions: ScreeningQuestion[] }
+import type { ScreeningQuestionType, StoredScreeningQuestion } from '../../../types/database'
 
+export type QuestionType = ScreeningQuestionType
+export type ScreeningQuestion = StoredScreeningQuestion
+export type JobDraft = { details: JobDetails; fields: ApplicantField[]; questions: ScreeningQuestion[] }

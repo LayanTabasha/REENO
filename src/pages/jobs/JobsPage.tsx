@@ -1,27 +1,41 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import JobsFilters from '../../components/jobs/JobsFilters'
 import JobsSummary from '../../components/jobs/JobsSummary'
 import JobsTable from '../../components/jobs/JobsTable'
 import JobsTabs from '../../components/jobs/JobsTabs'
-import { jobs, type JobStatus, type StatusFilter } from '../../components/jobs/jobsData'
+import type { JobStatus, StatusFilter } from '../../components/jobs/jobsData'
+import { getRecruiterJobs } from '../../services/jobsService'
+import { jobStatusDisplay, type JobWithStartup } from '../../types/database'
 
 function JobsPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<StatusFilter>('All')
   const [startup, setStartup] = useState('All startups')
+  const [jobs, setJobs] = useState<JobWithStartup[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadJobs = useCallback(async () => {
+    setLoading(true); setError('')
+    try { setJobs(await getRecruiterJobs()) } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load jobs.') } finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { getRecruiterJobs().then(setJobs).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Unable to load jobs.')).finally(() => setLoading(false)) }, [])
 
   const filteredJobs = useMemo(() => {
     const query = search.trim().toLocaleLowerCase()
 
     return jobs.filter((job) => {
-      const matchesSearch = !query || job.title.toLocaleLowerCase().includes(query) || job.startup.toLocaleLowerCase().includes(query)
-      const matchesStatus = status === 'All' || job.status === status
-      const matchesStartup = startup === 'All startups' || job.startup === startup
+      const matchesSearch = !query || job.title.toLocaleLowerCase().includes(query) || job.startup.name.toLocaleLowerCase().includes(query)
+      const matchesStatus = status === 'All' || jobStatusDisplay[job.status] === status
+      const matchesStartup = startup === 'All startups' || job.startup.name === startup
       return matchesSearch && matchesStatus && matchesStartup
     })
-  }, [search, startup, status])
+  }, [jobs, search, startup, status])
+  const counts = useMemo(() => ({ all: jobs.length, active: jobs.filter((job) => job.status === 'active').length, draft: jobs.filter((job) => job.status === 'draft').length, closed: jobs.filter((job) => job.status === 'closed').length }), [jobs])
+  const startups = useMemo(() => [...new Set(jobs.map((job) => job.startup.name))].sort(), [jobs])
 
   const clearFilters = () => {
     setSearch('')
@@ -43,12 +57,12 @@ function JobsPage() {
         </Link>
       </div>
 
-      <JobsSummary />
+      <JobsSummary counts={counts} />
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <JobsTabs value={status} onChange={(value: JobStatus | 'All') => setStatus(value)} />
-        <JobsFilters search={search} status={status} startup={startup} onSearchChange={setSearch} onStatusChange={setStatus} onStartupChange={setStartup} />
-        <JobsTable jobs={filteredJobs} onClearFilters={clearFilters} />
+        <JobsFilters search={search} status={status} startup={startup} startups={startups} onSearchChange={setSearch} onStatusChange={setStatus} onStartupChange={setStartup} />
+        {loading ? <div className="px-5 py-16 text-center text-sm font-semibold text-slate-500" role="status">Loading jobs…</div> : error ? <div className="px-5 py-16 text-center"><h3 className="font-semibold text-slate-900">Jobs could not be loaded</h3><p className="mx-auto mt-2 max-w-xl text-sm text-rose-700">{error}</p><button type="button" onClick={() => void loadJobs()} className="mt-5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">Retry</button></div> : <JobsTable jobs={filteredJobs} onClearFilters={clearFilters} />}
       </div>
     </section>
   )

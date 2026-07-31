@@ -6,24 +6,32 @@ import ApplicantProfilePage from '../pages/applicants/ApplicantProfilePage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import CreateJobPage from '../pages/jobs/CreateJobPage'
 import JobsPage from '../pages/jobs/JobsPage'
+import JobDetailsPage from '../pages/jobs/JobDetailsPage'
 import SettingsPage from '../pages/settings/SettingsPage'
 import ApplicationPage from '../pages/public/ApplicationPage'
 import ApplicationSuccessPage from '../pages/public/ApplicationSuccessPage'
 import CareersPage from '../pages/public/CareersPage'
 import PublicJobPage from '../pages/public/PublicJobPage'
+import LoginPage from '../pages/auth/LoginPage'
+import ProtectedRoute from './ProtectedRoute'
 
 function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="jobs" element={<JobsPage />} />
-          <Route path="jobs/new" element={<CreateJobPage />} />
-          <Route path="applicants" element={<ApplicantsPage />} />
-          <Route path="applicants/:applicantId" element={<ApplicantProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="jobs" element={<JobsPage />} />
+            <Route path="jobs/new" element={<CreateJobPage />} />
+            <Route path="jobs/:jobId" element={<JobDetailsPage />} />
+            <Route path="jobs/:jobId/edit" element={<CreateJobPage />} />
+            <Route path="applicants" element={<ApplicantsPage />} />
+            <Route path="applicants/:applicantId" element={<ApplicantProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
         </Route>
         <Route element={<PublicLayout />}>
           <Route path="careers" element={<CareersPage />} />

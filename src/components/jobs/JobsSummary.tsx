@@ -7,14 +7,13 @@ interface SummaryItem {
   iconClassName: string
 }
 
-const summaryItems: SummaryItem[] = [
-  { label: 'All jobs', value: 12, icon: BriefcaseBusiness, iconClassName: 'bg-teal-50 text-teal-700' },
-  { label: 'Active', value: 8, icon: CircleCheck, iconClassName: 'bg-emerald-50 text-emerald-700' },
-  { label: 'Drafts', value: 3, icon: FilePenLine, iconClassName: 'bg-amber-50 text-amber-700' },
-  { label: 'Closed', value: 1, icon: CircleStop, iconClassName: 'bg-slate-100 text-slate-600' },
-]
-
-function JobsSummary() {
+function JobsSummary({ counts }: { counts: { all: number; active: number; draft: number; closed: number } }) {
+  const summaryItems: SummaryItem[] = [
+    { label: 'All jobs', value: counts.all, icon: BriefcaseBusiness, iconClassName: 'bg-teal-50 text-teal-700' },
+    { label: 'Active', value: counts.active, icon: CircleCheck, iconClassName: 'bg-emerald-50 text-emerald-700' },
+    { label: 'Drafts', value: counts.draft, icon: FilePenLine, iconClassName: 'bg-amber-50 text-amber-700' },
+    { label: 'Closed', value: counts.closed, icon: CircleStop, iconClassName: 'bg-slate-100 text-slate-600' },
+  ]
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {summaryItems.map(({ label, value, icon: Icon, iconClassName }) => (

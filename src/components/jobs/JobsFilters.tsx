@@ -8,12 +8,11 @@ interface JobsFiltersProps {
   onSearchChange: (value: string) => void
   onStatusChange: (value: StatusFilter) => void
   onStartupChange: (value: string) => void
+  startups: string[]
 }
 
 const statuses: StatusFilter[] = ['All', 'Active', 'Draft', 'Closed']
-const startups = ['All startups', 'AeroQ', 'Sadeem Technology', 'GreenRoute', 'MedLoop']
-
-function JobsFilters({ search, status, startup, onSearchChange, onStatusChange, onStartupChange }: JobsFiltersProps) {
+function JobsFilters({ search, status, startup, startups, onSearchChange, onStatusChange, onStartupChange }: JobsFiltersProps) {
   return (
     <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:flex-wrap sm:p-6">
       <label className="relative min-w-0 flex-1 sm:min-w-72">
@@ -30,7 +29,7 @@ function JobsFilters({ search, status, startup, onSearchChange, onStatusChange, 
       <label>
         <span className="sr-only">Startup</span>
         <select value={startup} onChange={(event) => onStartupChange(event.target.value)} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10 sm:w-52">
-          {startups.map((option) => <option key={option}>{option}</option>)}
+          {['All startups', ...startups].map((option) => <option key={option}>{option}</option>)}
         </select>
       </label>
     </div>
