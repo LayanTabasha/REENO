@@ -70,6 +70,11 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
   const { error } = await requireSupabase().from('applications').update({ status }).eq('id', id)
   if (error) throw friendly(error, 'Unable to update the application status.')
 }
+export async function updateApplicationStatuses(ids: string[], status: ApplicationStatus): Promise<void> {
+  if (!ids.length) return
+  const { error } = await requireSupabase().from('applications').update({ status }).in('id', ids)
+  if (error) throw friendly(error, 'Unable to update the selected application statuses.')
+}
 export async function getApplicationFiles(applicationId: string): Promise<ApplicationFileRecord[]> {
   const { data, error } = await requireSupabase().from('application_files').select('*').eq('application_id', applicationId).order('created_at')
   if (error) throw friendly(error, 'Unable to load application files.')

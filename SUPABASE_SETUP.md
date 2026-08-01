@@ -61,7 +61,39 @@ Run `npm run dev`, then test all of the following:
 7. Use **Log out** in the recruiter sidebar. Confirm the app returns to `/login` and protected routes redirect again.
 8. Set the recruiter's `profiles.is_active` to `false`, sign out and attempt another sign-in. Access must be denied. Restore it to `true` for continued testing.
 
-Authentication may persist locally through Supabase's normal browser session storage even though the Remember me checkbox is currently informational. Applicant data, applications, storage, AI APIs, email, and external integrations remain outside this milestone.
+Authentication may persist locally through Supabase's normal browser session storage even though the Remember me checkbox is currently informational. Email and external publishing integrations remain outside this milestone.
+
+## Configure AI job content generation
+
+The browser never receives the OpenAI key. It calls the authenticated `generate-job-content` Supabase Edge Function, which verifies the caller's JWT and `public.is_active_recruiter()` before contacting OpenAI.
+
+1. Sign in to the OpenAI Platform, open **API keys**, create a new secret key for this project, and copy it once. Do not put it in `.env.local`, any `VITE_` variable, source code, or GitHub.
+2. Store it as an Edge Function secret (replace the placeholder locally; do not save the command containing the real key):
+
+   ```sh
+   supabase secrets set OPENAI_API_KEY=YOUR_OPENAI_API_KEY --project-ref YOUR_PROJECT_REF
+   ```
+
+3. Deploy the function:
+
+   ```sh
+   supabase functions deploy generate-job-content --project-ref YOUR_PROJECT_REF
+   ```
+
+4. Sign in to REENO as an active recruiter and use each AI button in the Create/Edit Job wizard. For a direct test, copy the recruiter's access token from a trusted local test session and run:
+
+   ```sh
+   curl -i https://YOUR_PROJECT_REF.supabase.co/functions/v1/generate-job-content \
+     -H "Authorization: Bearer RECRUITER_ACCESS_TOKEN" \
+     -H "Content-Type: application/json" \
+     --data '{"mode":"job_description","job":{"startupName":"Example Startup","title":"Software Engineering Intern","department":"Engineering","location":"Doha","employmentType":"Internship","workArrangement":"Hybrid"}}'
+   ```
+
+   Expect `200` and strict JSON. Also test without a token (`401`) and with an inactive/non-recruiter account (`403`).
+
+5. Confirm browser DevTools and the built JavaScript contain only the Supabase URL and publishable/anon key, never `OPENAI_API_KEY` or its value. The service-role key is not used by this flow.
+
+If the function is missing or the secret is unset, the UI shows a setup message and does not substitute mock content.
 # Real candidate applications
 
 The application milestone is defined in `supabase/migrations/20260731030000_create_candidate_applications.sql`. Run it manually in the Supabase SQL Editor after the earlier migrations. The app never runs this SQL automatically.

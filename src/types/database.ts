@@ -2,7 +2,7 @@ export type JobStatus = 'active' | 'draft' | 'closed'
 export type ScreeningQuestionType = 'Short text' | 'Long text' | 'Yes or no' | 'Multiple choice' | 'Number'
 export interface StoredScreeningQuestion { id: string; text: string; type: ScreeningQuestionType; required: boolean; options: string[] }
 export type RecruiterRole = 'recruiter' | 'admin'
-export type ApplicationStatus = 'new' | 'reviewing' | 'shortlisted' | 'interview' | 'offer' | 'hired' | 'rejected' | 'withdrawn'
+export type ApplicationStatus = 'new' | 'reviewing' | 'interview' | 'technical_assessment' | 'shortlisted' | 'offer' | 'hired' | 'rejected' | 'withdrawn'
 export type ScreeningAnswerValue = string | string[] | boolean | number
 export interface ScreeningAnswer { question_id: string; question: string; type: string; answer: ScreeningAnswerValue }
 export interface ApplicationRecord {
