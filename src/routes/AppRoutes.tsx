@@ -13,6 +13,10 @@ import ApplicationSuccessPage from '../pages/public/ApplicationSuccessPage'
 import CareersPage from '../pages/public/CareersPage'
 import PublicJobPage from '../pages/public/PublicJobPage'
 import LoginPage from '../pages/auth/LoginPage'
+import SignupPage from '../pages/signup/SignupPage'
+import CompanySignupPage from '../pages/signup/CompanySignupPage'
+import EmployeeSignupPage from '../pages/signup/EmployeeSignupPage'
+import PendingApprovalPage from '../pages/signup/PendingApprovalPage'
 import ProtectedRoute from './ProtectedRoute'
 
 function AppRoutes() {
@@ -20,6 +24,10 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="login" element={<LoginPage />} />
+        <Route path="signup" element={<SignupPage />} />
+        <Route path="signup/company" element={<CompanySignupPage />} />
+        <Route path="signup/employee" element={<EmployeeSignupPage />} />
+        <Route path="signup/pending" element={<PendingApprovalPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
