@@ -164,7 +164,7 @@ if (
             </p>
 
             <button type="submit" className="h-11 w-full rounded-lg bg-teal-700 font-semibold text-white hover:bg-teal-800">
-              Continue to Preview
+              Continue
             </button>
           </form>
 
