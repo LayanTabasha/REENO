@@ -47,5 +47,5 @@ export function createLinkedInTemplate(job: AiJobInput): string {
   const startup = value(job.startupName, 'a QSTP startup')
   const location = value(job.location, 'Qatar')
   const arrangement = value(job.workArrangement, 'Flexible')
-  return `We’re looking for a ${title} to join ${startup}.\n\nThis is an opportunity to gain practical experience, collaborate with a startup team, and contribute to meaningful work.\n\nLocation: ${location}\nWork arrangement: ${arrangement}\n\nInterested? Review the role details and submit your application through the REENO careers page.\n\n#Internship #QSTP #Qatar #Careers`
+  return `We’re looking for a ${title} to join ${startup}.\n\nThis is an opportunity to gain practical experience, collaborate with a startup team, and contribute to meaningful work.\n\nLocation: ${location}\nWork arrangement: ${arrangement}\n\nInterested? Review the role details and submit your application through the REENO careers page.\n\n#Internship ${job.accountType === 'company' ? '' : '#QSTP '}#Qatar #Careers`
 }

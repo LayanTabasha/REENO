@@ -42,7 +42,8 @@ export interface Startup {
 
 export interface Job {
   id: string
-  startup_id: string
+  startup_id: string | null
+  company_id: string | null
   title: string
   slug: string
   department: string | null
@@ -63,11 +64,13 @@ export interface Job {
 }
 
 export interface JobWithStartup extends Job {
-  startup: Startup
+  application_count?: number
+  startup: Startup | null
+  company: { id: string; name: string; slug: string } | null
 }
 
 export interface CreateJobInput {
-  startup_id: string
+  startup_id: string | null
   title: string
   slug: string
   department?: string | null

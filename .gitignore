@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Private environment files and Supabase CLI machine state
+.env
+.env.*
+!.env.example
+!supabase/functions/.env.example
+supabase/.temp/
+# Private diagnostic output (keep SQL check scripts, exclude captured reports)
+reeno-multiclient-review.txt
+**/workspace_compatibility_report*
+**/reeno_compatibility_report*

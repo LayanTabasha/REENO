@@ -12,14 +12,25 @@ const navigation = [
 function Sidebar() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
-  const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Recruiter'
+  const roleLabel =
+  profile?.account_type === 'company'
+    ? profile.role === 'company_admin'
+      ? 'Company Admin'
+      : 'Employee'
+    : profile?.role === 'admin'
+      ? 'Admin'
+      : 'Recruiter'
   const logout = async () => { try { await signOut() } finally { navigate('/login', { replace: true }) } }
   return (
     <aside className="bg-[#0c2f32] text-white lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col">
       <div className="flex h-20 items-center justify-between px-5 lg:h-auto lg:block lg:px-7 lg:py-8">
         <div>
           <p className="text-2xl font-bold tracking-[0.16em]">REENO</p>
-          <p className="mt-0.5 text-xs font-medium tracking-wide text-teal-200">QSTP Talent</p>
+          <p className="mt-0.5 text-xs font-medium tracking-wide text-teal-200">
+  {profile?.account_type === 'company'
+    ? profile.organization
+    : 'QSTP Talent'}
+</p>
         </div>
         <div className="hidden text-right sm:block lg:hidden">
           <p className="text-sm font-medium">{profile?.full_name}</p>

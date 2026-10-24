@@ -1,24 +1,11 @@
-interface ActiveJob {
-  title: string
-  startup: string
-  applicants: number
-  deadline: string
-}
-
-const activeJobs: ActiveJob[] = [
-  { title: 'Software Engineering Intern', startup: 'Sadeem Technology', applicants: 31, deadline: '14 Aug 2026' },
-  { title: 'Product Design Intern', startup: 'AeroQ', applicants: 27, deadline: '18 Aug 2026' },
-  { title: 'Data Analytics Intern', startup: 'GreenRoute', applicants: 24, deadline: '21 Aug 2026' },
-  { title: 'Operations Intern', startup: 'MedLoop', applicants: 19, deadline: '25 Aug 2026' },
-]
-
-function ActiveJobs() {
+function ActiveJobs({ jobs, applications }: { jobs: import('../../types/database').JobWithStartup[]; applications: import('../../types/database').ApplicationWithJob[] }) {
+ const activeJobs = jobs.filter(j => j.status === 'active').map(j => ({ title: j.title, startup: j.startup?.name ?? j.company?.name, applicants: applications.filter(a => a.job_id === j.id).length, deadline: j.deadline ?? 'No deadline' }))
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>
-            {['Job title', 'Startup', 'Applicants', 'Deadline', 'Status'].map((heading) => <th key={heading} className="px-5 py-3 sm:px-6">{heading}</th>)}
+            {['Job title', 'Organization', 'Applicants', 'Deadline', 'Status'].map((heading) => <th key={heading} className="px-5 py-3 sm:px-6">{heading}</th>)}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">

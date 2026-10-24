@@ -21,7 +21,7 @@ function Header() {
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">{details.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{details.subtitle}</p>
+          <p className="mt-1 text-sm text-slate-500">{profile?.account_type === 'company' ? details.subtitle.replace('internship hiring', 'hiring').replaceAll('internship', 'job').replace('for QSTP startups', 'for your company') : details.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
           <label className="relative min-w-0 flex-1 sm:w-80 sm:flex-none">

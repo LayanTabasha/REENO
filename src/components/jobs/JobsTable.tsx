@@ -1,3 +1,4 @@
+import { useAuth } from '../../contexts/useAuth'
 import { BriefcaseBusiness, MoreHorizontal } from 'lucide-react'
 import type { JobWithStartup } from '../../types/database'
 import { jobStatusDisplay, type JobStatusDisplay } from '../../types/database'
@@ -16,6 +17,8 @@ const statusStyles: Record<JobStatusDisplay, string> = {
 
 function JobsTable({ jobs, onClearFilters }: JobsTableProps) {
   const navigate = useNavigate()
+  const { profile } = useAuth()
+  const isCompany = profile?.account_type === 'company'
   if (jobs.length === 0) {
     return (
       <div className="px-5 py-16 text-center">
@@ -31,15 +34,15 @@ function JobsTable({ jobs, onClearFilters }: JobsTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[1050px] text-left text-sm">
         <thead className="bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <tr>{['Job title', 'Startup', 'Location', 'Applicants', 'Deadline', 'Status', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 sm:px-6">{heading}</th>)}</tr>
+          <tr>{['Job title', isCompany ? 'Company' : 'Startup', 'Location', 'Applicants', 'Deadline', 'Status', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 sm:px-6">{heading}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
           {jobs.map((job) => (
             <tr key={job.id} className="transition-colors hover:bg-slate-50/70">
               <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900 sm:px-6">{job.title}</td>
-              <td className="whitespace-nowrap px-5 py-4 text-slate-600 sm:px-6">{job.startup.name}</td>
+              <td className="whitespace-nowrap px-5 py-4 text-slate-600 sm:px-6">{(job.startup?.name ?? job.company?.name ?? "Organization")}</td>
               <td className="whitespace-nowrap px-5 py-4 text-slate-500 sm:px-6">{job.location}</td>
-              <td className="px-5 py-4 font-semibold tabular-nums text-slate-700 sm:px-6">0</td>
+              <td className="px-5 py-4 font-semibold tabular-nums text-slate-700 sm:px-6">{job.application_count ?? 0}</td>
               <td className="whitespace-nowrap px-5 py-4 text-slate-500 sm:px-6">{job.deadline ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${job.deadline}T00:00:00Z`)) : '—'}</td>
               <td className="px-5 py-4 sm:px-6"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${statusStyles[jobStatusDisplay[job.status]]}`}>{jobStatusDisplay[job.status]}</span></td>
               <td className="whitespace-nowrap px-5 py-4 sm:px-6">

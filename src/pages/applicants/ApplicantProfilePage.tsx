@@ -27,16 +27,18 @@ import type {
 const statuses: ApplicationStatus[] = [
   "new",
   "reviewing",
+  "technical_assessment",
   "shortlisted",
   "interview",
   "offer",
   "hired",
   "rejected",
+  "withdrawn",
 ];
 const label = (value: string) =>
   value === "reviewing"
     ? "Under review"
-    : value[0].toUpperCase() + value.slice(1);
+    : value[0].toUpperCase() + value.slice(1).replaceAll("_", " ");
 
 export default function ApplicantProfilePage() {
   const { applicantId } = useParams();
@@ -135,6 +137,8 @@ export default function ApplicantProfilePage() {
     }
   };
   const resume = files.find((file) => file.file_type === "resume");
+  const linkedinUrl = safeExternalUrl(application.linkedin_url)
+  const portfolioUrl = safeExternalUrl(application.portfolio_url)
 
   return (
     <section className="space-y-6">
@@ -149,7 +153,7 @@ export default function ApplicantProfilePage() {
         <div>
           <h1 className="text-3xl font-bold">{application.full_name}</h1>
           <p className="mt-2 text-slate-600">
-            {application.job.title} · {application.job.startup.name}
+            {application.job.title} · {(application.job.startup?.name ?? application.job.company?.name ?? "Organization")}
           </p>
           <p className="mt-1 text-sm text-slate-500">
             Submitted {new Date(application.submitted_at).toLocaleString()}
@@ -200,21 +204,21 @@ export default function ApplicantProfilePage() {
               ))}
             </dl>
             <div className="mt-5 flex gap-4">
-              {application.linkedin_url && (
+              {linkedinUrl && (
                 <a
                   target="_blank"
                   rel="noreferrer"
-                  href={application.linkedin_url}
+                  href={linkedinUrl}
                   className="text-teal-700"
                 >
                   LinkedIn <ExternalLink className="inline size-3" />
                 </a>
               )}
-              {application.portfolio_url && (
+              {portfolioUrl && (
                 <a
                   target="_blank"
                   rel="noreferrer"
-                  href={application.portfolio_url}
+                  href={portfolioUrl}
                   className="text-teal-700"
                 >
                   Portfolio or GitHub <ExternalLink className="inline size-3" />
@@ -288,6 +292,7 @@ export default function ApplicantProfilePage() {
               <p className="text-sm text-slate-500">No resume is attached.</p>
             )}
           </Card>
+          {files.filter(file => file.file_type !== 'resume').map(file => <AttachmentLinks key={file.id} file={file} />)}
           <Card title="AI candidate insights — demo placeholder">
             <p className="text-sm text-slate-600">
               <AIResumeScoreContent result={writingResult} hasResume={Boolean(resume)} />
@@ -317,4 +322,22 @@ function Card({
       {children}
     </section>
   );
+}
+
+function safeExternalUrl(value: string | null): string | undefined {
+  if (!value) return undefined
+  try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) ? url.href : undefined } catch { return undefined }
+}
+
+function AttachmentLinks({ file }: { file: ApplicationFileRecord }) {
+  const [links, setLinks] = useState<{ open: string; download: string } | null>(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let live = true
+    void Promise.all([createSignedFileUrl(file.storage_path), createSignedFileUrl(file.storage_path, file.original_filename)])
+      .then(([open, download]) => { if (live) setLinks({ open, download }) })
+      .catch(reason => { if (live) setError(reason instanceof Error ? reason.message : 'Unable to load this attachment.') })
+    return () => { live = false }
+  }, [file.storage_path, file.original_filename])
+  return <Card title={file.file_type === 'cover_letter' ? 'Cover letter attachment' : 'Application attachment'}><div className="rounded-lg border p-3"><p className="break-all text-sm font-bold">{file.original_filename}</p>{error ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : links ? <div className="mt-3 flex flex-wrap gap-2"><a href={links.open} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-2 text-sm font-semibold">Open file</a><a href={links.download} className="rounded-lg border px-3 py-2 text-sm font-semibold">Download file</a></div> : <p role="status" className="mt-3 text-sm text-slate-500">Loading secure links...</p>}<p className="mt-2 text-xs text-slate-500">Secure links expire after 10 minutes.</p></div></Card>
 }

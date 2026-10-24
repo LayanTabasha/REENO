@@ -1,6 +1,6 @@
 import { requireSupabase } from '../lib/supabase'
 
-export type AiJobInput = { startupName: string; title: string; department: string; location: string; employmentType: string; workArrangement: string; description?: string; qualifications?: string; requirements?: string }
+export type AiJobInput = { accountType?: 'company' | 'qstp'; startupName: string; title: string; department: string; location: string; employmentType: string; workArrangement: string; description?: string; qualifications?: string; requirements?: string }
 export type GeneratedJobDescription = { description: string; qualifications: string; requirements: string }
 export type GeneratedQuestion = { text: string; type: 'short_text' | 'long_text' | 'yes_no' | 'single_choice' | 'number'; required: boolean; category: 'role_specific' | 'behavioral' | 'motivation'; options: string[] }
 

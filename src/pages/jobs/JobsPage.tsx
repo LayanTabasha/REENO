@@ -1,3 +1,4 @@
+import { useAuth } from '../../contexts/useAuth'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -10,6 +11,9 @@ import { getRecruiterJobs } from '../../services/jobsService'
 import { jobStatusDisplay, type JobWithStartup } from '../../types/database'
 
 function JobsPage() {
+ const { profile } = useAuth()
+ const isCompany = profile?.account_type === 'company'
+
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<StatusFilter>('All')
   const [startup, setStartup] = useState('All startups')
@@ -28,14 +32,14 @@ function JobsPage() {
     const query = search.trim().toLocaleLowerCase()
 
     return jobs.filter((job) => {
-      const matchesSearch = !query || job.title.toLocaleLowerCase().includes(query) || job.startup.name.toLocaleLowerCase().includes(query)
+      const matchesSearch = !query || job.title.toLocaleLowerCase().includes(query) || (job.startup?.name ?? job.company?.name ?? "Organization").toLocaleLowerCase().includes(query)
       const matchesStatus = status === 'All' || jobStatusDisplay[job.status] === status
-      const matchesStartup = startup === 'All startups' || job.startup.name === startup
+      const matchesStartup = startup === 'All startups' || (job.startup?.name ?? job.company?.name ?? "Organization") === startup
       return matchesSearch && matchesStatus && matchesStartup
     })
   }, [jobs, search, startup, status])
   const counts = useMemo(() => ({ all: jobs.length, active: jobs.filter((job) => job.status === 'active').length, draft: jobs.filter((job) => job.status === 'draft').length, closed: jobs.filter((job) => job.status === 'closed').length }), [jobs])
-  const startups = useMemo(() => [...new Set(jobs.map((job) => job.startup.name))].sort(), [jobs])
+  const startups = useMemo(() => [...new Set(jobs.map((job) => (job.startup?.name ?? job.company?.name ?? "Organization")))].sort(), [jobs])
 
   const clearFilters = () => {
     setSearch('')
@@ -47,9 +51,9 @@ function JobsPage() {
     <section className="space-y-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">QSTP Talent</p>
+          <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">{isCompany ? profile.organization : 'QSTP Talent'}</p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Jobs</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">Manage internship opportunities published on behalf of QSTP startups.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">{isCompany ? 'Manage opportunities for your company.' : 'Manage internship opportunities published on behalf of QSTP startups.'}</p>
         </div>
         <Link to="/jobs/new" className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
           <Plus aria-hidden="true" className="size-4" />

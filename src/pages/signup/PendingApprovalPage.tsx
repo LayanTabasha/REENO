@@ -4,6 +4,9 @@ import { Link, useLocation } from 'react-router-dom'
 export default function PendingApprovalPage() {
   const location = useLocation()
   const isPreview = location.state?.preview === true
+  const submitted = location.state?.submitted === true
+  const companyName = typeof location.state?.companyName === 'string' ? location.state.companyName : 'Your company'
+  const notificationPending = submitted && location.state?.approvalEmailSent === false
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-12">
@@ -29,8 +32,7 @@ export default function PendingApprovalPage() {
           </h1>
 
           <p className="mt-4 text-slate-600">
-            This is a preview of the page you will see after submitting
-            your registration request.
+            {submitted ? companyName + ' registration has been submitted.' : isPreview ? 'This is a preview of the registration confirmation page.' : 'Company registrations require REENO approval.'}
           </p>
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left">
@@ -38,16 +40,14 @@ export default function PendingApprovalPage() {
               Approval Required
             </p>
             <p className="mt-2 text-sm leading-6 text-amber-800">
-              Once registration is enabled, your request will be reviewed
-              by the REENO administration team. Access will only be
-              granted after approval.
+              {isPreview ? 'When employee registration is enabled, requests will require approval.' : 'The REENO administration team will review your request. Your administrator can sign in only after the company has been approved.'}
             </p>
           </div>
 
           <p className="mt-5 text-sm text-slate-500">
             {isPreview
               ? 'Preview mode: No account has been created and no request has been submitted.'
-              : 'This page is for demonstration only. Registration is not yet enabled.'}
+              : notificationPending ? 'Your registration is saved, but the approval notification could not be delivered. Contact REENO support; please do not register again.' : submitted ? 'Your account is pending approval. You do not need to submit another registration.' : 'Register your company to request access.'}
           </p>
 
           <Link

@@ -38,8 +38,10 @@ Deno.serve(async (request) => {
   const supabase = createClient(url, anonKey, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } })
   const { data: userData, error: userError } = await supabase.auth.getUser(auth.slice(7))
   if (userError || !userData.user) return json({ error: 'Authentication required.' }, 401)
-  const { data: allowed, error: accessError } = await supabase.rpc('is_active_recruiter')
-  if (accessError || allowed !== true) return json({ error: 'Active recruiter access is required.' }, 403)
+  const { data: membership, error: membershipError } = await supabase.from('company_memberships').select('company_id').eq('user_id', userData.user.id).maybeSingle()
+  if (membershipError) return json({ error: 'Unable to verify workspace access.' }, 403)
+  const { data: allowed, error: accessError } = await supabase.rpc('can_manage_workspace', { target_company: membership?.company_id ?? null })
+  if (accessError || allowed !== true) return json({ error: 'An active recruiter or approved company administrator is required.' }, 403)
   let payload: { mode?: unknown; job?: unknown }
   try { payload = await request.json() } catch { return json({ error: 'Invalid JSON body.' }, 400) }
   if (!modes.includes(payload.mode as Mode)) return json({ error: 'Invalid mode.' }, 400)

@@ -1,32 +1,8 @@
+import { Link } from 'react-router-dom'
 import { UsersRound } from 'lucide-react'
 
-type ApplicationStatus = 'New' | 'Under review' | 'Shortlisted'
-
-interface Application {
-  name: string
-  initials: string
-  internship: string
-  startup: string
-  applied: string
-  status: ApplicationStatus
-}
-
-const applications: Application[] = [
-  { name: 'Mariam Al-Kuwari', initials: 'MA', internship: 'Product Design Intern', startup: 'AeroQ', applied: 'Today', status: 'New' },
-  { name: 'Omar Hassan', initials: 'OH', internship: 'Software Engineering Intern', startup: 'Sadeem Technology', applied: 'Today', status: 'Under review' },
-  { name: 'Lina Mansour', initials: 'LM', internship: 'Data Analytics Intern', startup: 'GreenRoute', applied: 'Yesterday', status: 'Shortlisted' },
-  { name: 'Yousef Al-Mohannadi', initials: 'YA', internship: 'Operations Intern', startup: 'MedLoop', applied: 'Yesterday', status: 'New' },
-  { name: 'Noor Ibrahim', initials: 'NI', internship: 'Marketing Intern', startup: 'AeroQ', applied: '29 Jul', status: 'Under review' },
-  { name: 'Khalid Farooq', initials: 'KF', internship: 'UX Research Intern', startup: 'Sadeem Technology', applied: '28 Jul', status: 'Shortlisted' },
-]
-
-const statusStyles: Record<ApplicationStatus, string> = {
-  New: 'bg-sky-50 text-sky-700 ring-sky-600/20',
-  'Under review': 'bg-amber-50 text-amber-700 ring-amber-600/20',
-  Shortlisted: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-}
-
-function RecentApplications() {
+function RecentApplications({ items }: { items: import('../../types/database').ApplicationWithJob[] }) {
+ const applications = items.slice(0, 6).map(a => ({ id: a.id, name: a.full_name, initials: a.full_name.split(' ').map(n => n[0]).slice(0,2).join(''), internship: a.job.title, startup: a.job.startup?.name ?? a.job.company?.name, applied: new Date(a.submitted_at).toLocaleDateString(), status: a.status }))
   return (
     <article className="min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
@@ -44,7 +20,7 @@ function RecentApplications() {
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead className="bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
-              {['Applicant', 'Internship', 'Startup', 'Applied', 'Status', 'Action'].map((heading) => <th key={heading} className="px-5 py-3">{heading}</th>)}
+              {['Applicant', 'Job', 'Organization', 'Applied', 'Status', 'Action'].map((heading) => <th key={heading} className="px-5 py-3">{heading}</th>)}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -59,8 +35,8 @@ function RecentApplications() {
                 <td className="whitespace-nowrap px-5 py-4 text-slate-600">{application.internship}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-slate-600">{application.startup}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-slate-500">{application.applied}</td>
-                <td className="whitespace-nowrap px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${statusStyles[application.status]}`}>{application.status}</span></td>
-                <td className="px-5 py-4"><button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">View</button></td>
+                <td className="whitespace-nowrap px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset bg-teal-50 text-teal-700`}>{application.status}</span></td>
+                <td className="px-5 py-4"><Link to={`/applicants/${application.id}`} className="font-semibold text-teal-700">View</Link></td>
               </tr>
             ))}
           </tbody>

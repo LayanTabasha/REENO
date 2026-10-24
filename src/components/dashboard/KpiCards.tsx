@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BriefcaseBusiness, Clock3, UserCheck, UsersRound, type LucideIcon } from 'lucide-react'
 
 interface Kpi {
@@ -7,14 +8,14 @@ interface Kpi {
   icon: LucideIcon
 }
 
-const kpis: Kpi[] = [
-  { label: 'Active jobs', value: 8, supportingText: 'Across 6 QSTP startups', icon: BriefcaseBusiness },
-  { label: 'Total applicants', value: 126, supportingText: '12% more than last month', icon: UsersRound },
-  { label: 'Shortlisted', value: 24, supportingText: '19% of all applicants', icon: UserCheck },
-  { label: 'New this week', value: 18, supportingText: '5 awaiting first review', icon: Clock3 },
-]
-
-function KpiCards() {
+function KpiCards({ jobs, applications }: { jobs: import('../../types/database').JobWithStartup[]; applications: import('../../types/database').ApplicationWithJob[] }) {
+ const [now] = useState(() => Date.now())
+ const kpis: Kpi[] = [
+ { label: 'Active jobs', value: jobs.filter(j => j.status === 'active').length, supportingText: 'In your workspace', icon: BriefcaseBusiness },
+ { label: 'Total applicants', value: applications.length, supportingText: 'In your workspace', icon: UsersRound },
+ { label: 'Shortlisted', value: applications.filter(a => a.status === 'shortlisted').length, supportingText: 'Current shortlist', icon: UserCheck },
+ { label: 'New this week', value: applications.filter(a => Date.parse(a.submitted_at) >= now - 7 * 86400000).length, supportingText: 'Last seven days', icon: Clock3 },
+ ]
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {kpis.map(({ label, value, supportingText, icon: Icon }) => (

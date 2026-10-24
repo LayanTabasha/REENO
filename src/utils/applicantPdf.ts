@@ -23,7 +23,7 @@ export function createApplicantPdf(content: ApplicantPdfContent): Blob {
   section('Applicant details')
   ;[['Full name', a.full_name], ['Email', a.email], ['Phone', a.phone], ['Country of residence', a.country_of_residence], ['University', a.university], ['Degree', a.degree], ['Field of study', a.field_of_study], ['Expected graduation date', date(a.expected_graduation_date)], ['LinkedIn URL', a.linkedin_url], ['Portfolio URL', a.portfolio_url], ['Source', a.source]].forEach(([label, value]) => row(String(label), value))
   section('Job details')
-  ;[['Job title', a.job.title], ['Startup', a.job.startup.name], ['Department', a.job.department], ['Location', a.job.location], ['Employment type', a.job.employment_type], ['Work arrangement', a.job.work_arrangement], ['Deadline', date(a.job.deadline)]].forEach(([label, value]) => row(String(label), value))
+  ;[['Job title', a.job.title], [a.job.company_id ? 'Company' : 'Startup', (a.job.startup?.name ?? a.job.company?.name ?? "Organization")], ['Department', a.job.department], ['Location', a.job.location], ['Employment type', a.job.employment_type], ['Work arrangement', a.job.work_arrangement], ['Deadline', date(a.job.deadline)]].forEach(([label, value]) => row(String(label), value))
   section('Cover letter'); text(a.cover_letter?.trim() || content.coverLetterText?.trim() || 'Not provided')
   section('Screening answers')
   if (!a.screening_answers.length) text('No screening questions were included')
